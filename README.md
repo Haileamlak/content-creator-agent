@@ -2,7 +2,6 @@
   <img src="logo.png" alt="Conca Logo" width="200px">
 </p>
 
-# Conca
 ### The Autonomous Content Engine for Modern Brands
 
 **Conca** is a sophisticated, production-grade autonomous agent built in Go, designed to scale from a CLI utility to a comprehensive SaaS platform. It researches trends, generates platform-optimized content, manages multiple brand identities, and optimizes performance using live analytics and semantic memory.
@@ -82,16 +81,6 @@ Sync performance data from social platforms to local memory:
 ```bash
 go run cmd/main.go --sync
 ```
-
----
-
-## The Vision: Scaling Conca to a $1B Company
-
-Conca is built as the foundation for a platform that replaces the traditional social media agency. 
-
-**Current Phase**: CLI tool & Core SaaS API Foundation (DONE ✅).
-**Phase 2**: Multi-tenant database, Job queues, and Dashboard (IN PROGRESS 🏗).
-**Phase 3**: A/B testing engine, Visual content generation, and Enterprise approval workflows.
 
 ---
 
