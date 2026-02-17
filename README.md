@@ -2,8 +2,6 @@
   <img src="logo.png" alt="Conca Logo" width="200px">
 </p>
 
-### The Autonomous Content Engine for Modern Brands
-
 **Conca** is a sophisticated, production-grade autonomous agent built in Go, designed to scale from a CLI utility to a comprehensive SaaS platform. It researches trends, generates platform-optimized content, manages multiple brand identities, and optimizes performance using live analytics and semantic memory.
 
 ---
