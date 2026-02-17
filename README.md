@@ -40,8 +40,8 @@ The system is built on a pragmatic, flat package structure designed for high vel
 
 ### Installation
 ```bash
-git clone https://github.com/Haileamlak/ai-content-creator-agent.git
-cd ai-content-creator-agent
+git clone https://github.com/Haileamlak/conca.git
+cd conca
 go mod download
 ```
 

@@ -3,11 +3,14 @@ package main
 import (
 	"content-creator-agent/api"
 	"content-creator-agent/memory"
+	"content-creator-agent/scheduler"
 	"content-creator-agent/tools"
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -42,7 +45,7 @@ func main() {
 		search = ddg
 	}
 
-	llm := tools.NewGeminiClient(geminiKey, "gemini-2.0-flash")
+	llm := tools.NewGeminiClient(geminiKey, "gemini-2.5-flash")
 	embedding := tools.NewGeminiEmbeddingClient(geminiKey, "gemini-embedding-001")
 
 	// Social
@@ -90,9 +93,24 @@ func main() {
 		fmt.Println("WARNING: Using default JWT_SECRET. Set JWT_SECRET env for production.")
 	}
 
+	// --- Job Queue & Workers ---
+	queue, err := scheduler.NewSQLiteQueue(filepath.Join(*dataDir, "jobs.db"))
+	if err != nil {
+		log.Fatalf("Failed to initialize job queue: %v", err)
+	}
+	defer queue.Close()
+
+	factory := scheduler.DefaultAgentFactory(store, search, llm, social, embedding, analytics, *dataDir)
+	worker := scheduler.NewWorker(queue, factory)
+	go worker.Start(context.Background())
+
+	sched := scheduler.NewScheduler(store, queue)
+	go sched.Start()
+
 	// --- Build server ---
 	handlers := &api.Handlers{
 		Store:     store,
+		Queue:     queue,
 		JWTSecret: jwtSecret,
 		Search:    search,
 		LLM:       llm,

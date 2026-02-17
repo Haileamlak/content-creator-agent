@@ -1,16 +1,15 @@
 package api
 
 import (
-	"content-creator-agent/agent"
 	"content-creator-agent/memory"
 	"content-creator-agent/models"
+	"content-creator-agent/scheduler"
 	"content-creator-agent/tools"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -18,6 +17,7 @@ import (
 // Handlers holds the dependencies for all HTTP handlers.
 type Handlers struct {
 	Store     memory.Store
+	Queue     scheduler.Queue
 	JWTSecret string
 
 	// Tools needed to construct agents on-the-fly per brand
@@ -169,22 +169,15 @@ func (h *Handlers) DeleteBrand(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) TriggerRun(w http.ResponseWriter, r *http.Request) {
 	brandID := chi.URLParam(r, "brandID")
-	brand, _, err := h.Store.GetBrand(brandID)
-	if err != nil {
+	if _, _, err := h.Store.GetBrand(brandID); err != nil {
 		Error(w, http.StatusNotFound, "brand not found")
 		return
 	}
 
-	// For MVP/backward compatibility we still use LocalVectorStore but we'll migrate that too later.
-	// Currently vector store is brand-specific by path.
-	vectorStore := memory.NewLocalVectorStore(filepath.Join(h.DataDir, brandID, "vectors.json"))
-	a := agent.NewAgent(brand, h.Search, h.LLM, h.Social, h.Store, vectorStore, h.Embedding, h.Analytics)
-
-	go func() {
-		if err := a.Run(); err != nil {
-			fmt.Printf("[API] Agent run failed for brand %s: %v\n", brandID, err)
-		}
-	}()
+	if err := h.Queue.Enqueue(brandID, scheduler.JobTypeRun, 0, ""); err != nil {
+		Error(w, http.StatusInternalServerError, "failed to enqueue job")
+		return
+	}
 
 	JSON(w, http.StatusAccepted, map[string]string{
 		"status":  "accepted",
@@ -195,20 +188,15 @@ func (h *Handlers) TriggerRun(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) TriggerSync(w http.ResponseWriter, r *http.Request) {
 	brandID := chi.URLParam(r, "brandID")
-	brand, _, err := h.Store.GetBrand(brandID)
-	if err != nil {
+	if _, _, err := h.Store.GetBrand(brandID); err != nil {
 		Error(w, http.StatusNotFound, "brand not found")
 		return
 	}
 
-	vectorStore := memory.NewLocalVectorStore(filepath.Join(h.DataDir, brandID, "vectors.json"))
-	a := agent.NewAgent(brand, h.Search, h.LLM, h.Social, h.Store, vectorStore, h.Embedding, h.Analytics)
-
-	go func() {
-		if err := a.SyncAnalytics(); err != nil {
-			fmt.Printf("[API] Sync failed for brand %s: %v\n", brandID, err)
-		}
-	}()
+	if err := h.Queue.Enqueue(brandID, scheduler.JobTypeSync, 0, ""); err != nil {
+		Error(w, http.StatusInternalServerError, "failed to enqueue sync job")
+		return
+	}
 
 	JSON(w, http.StatusAccepted, map[string]string{
 		"status":  "accepted",

@@ -123,6 +123,99 @@ func (a *Agent) Run() error {
 	return nil
 }
 
+// PlanBatch researches and generates a series of posts to be scheduled for the future.
+func (a *Agent) PlanBatch(postCount int) error {
+	fmt.Printf("🎯 Planning batch of %d posts for brand: %s\n", postCount, a.Brand.Name)
+
+	// 1. Research
+	fmt.Println("Step 1: Researching latest trends for batch...")
+	query := fmt.Sprintf("latest trends in %s", a.Brand.Industry)
+	trends, err := a.Search.Search(query)
+	if err != nil {
+		return fmt.Errorf("research failed: %w", err)
+	}
+
+	// 2. Generate multiple plans
+	var topics []string
+	for i := 0; i < postCount; i++ {
+		topic, err := a.Plan(trends)
+		if err != nil {
+			return err
+		}
+		topics = append(topics, topic)
+		fmt.Printf("Planned topic %d: %s\n", i+1, topic)
+	}
+
+	// 3. For each topic, generate and schedule
+	for i, topic := range topics {
+		fmt.Printf("Step 3.%d: Generating content for: %s\n", i+1, topic)
+
+		var draft string
+		var score int
+		for retry := 0; retry < 3; retry++ {
+			draft, err = a.Generate(topic)
+			if err != nil {
+				return err
+			}
+			_, score, err = a.Evaluate(draft)
+			if err != nil {
+				return err
+			}
+			if score >= 7 {
+				break
+			}
+		}
+
+		// Schedule them evenly over the next week (simplified logic)
+		scheduleTime := time.Now().Add(time.Duration((i+1)*24) * time.Hour)
+
+		sp := models.ScheduledPost{
+			ID:          fmt.Sprintf("sp-%d-%d", time.Now().Unix(), i),
+			BrandID:     a.Brand.ID,
+			Topic:       topic,
+			Content:     draft,
+			Platform:    "LinkedIn/X",
+			Status:      models.StatusPending,
+			ScheduledAt: scheduleTime,
+			CreatedAt:   time.Now(),
+		}
+
+		if err := a.Store.SaveScheduledPost(sp); err != nil {
+			fmt.Printf("Warning: Failed to save scheduled post: %v\n", err)
+		} else {
+			fmt.Printf("✅ Scheduled post %d for %v\n", i+1, scheduleTime.Format(time.RFC822))
+		}
+	}
+
+	return nil
+}
+
+// PublishScheduledPost takes a previously planned post and pushes it to social media.
+func (a *Agent) PublishScheduledPost(sp models.ScheduledPost) error {
+	fmt.Printf("🚀 Publishing scheduled post: %s\n", sp.ID)
+
+	post := models.Post{
+		ID:        fmt.Sprintf("p-%d", time.Now().Unix()),
+		BrandID:   sp.BrandID,
+		Topic:     sp.Topic,
+		Content:   sp.Content,
+		Platform:  sp.Platform,
+		Status:    models.StatusPublished,
+		CreatedAt: time.Now(),
+	}
+
+	if err := a.Social.Post(&post); err != nil {
+		return err
+	}
+
+	// Update status and save to history
+	if err := a.Store.SavePost(post); err != nil {
+		return err
+	}
+
+	return a.Store.UpdateScheduledPostStatus(sp.ID, models.StatusPublished)
+}
+
 // Plan uses the LLM to select the best trend.
 func (a *Agent) Plan(trends []models.Trend) (string, error) {
 	var trendList []string

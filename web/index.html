@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conca | Autonomous Content Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <!-- Auth View -->
+        <section id="auth-view" class="view hidden">
+            <div class="auth-container glass">
+                <img src="/logo.png" alt="Conca Logo" class="auth-logo">
+                <h1>Welcome to Conca</h1>
+                <p class="subtitle">Autonomous growth for your brand.</p>
+                
+                <form id="auth-form">
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="you@example.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Sign In</button>
+                    <p class="toggle-auth">Don't have an account? <a href="#" id="show-register">Register</a></p>
+                </form>
+            </div>
+        </section>
+
+        <!-- Main Dashboard View -->
+        <section id="dashboard-view" class="view hidden">
+            <nav class="sidebar glass">
+                <div class="sidebar-header">
+                    <img src="/logo.png" alt="Conca Logo" class="nav-logo">
+                    <span class="brand-name">Conca</span>
+                </div>
+                <ul class="nav-links">
+                    <li class="active" data-view="overview">Dashboard</li>
+                    <li data-view="brands">Brands</li>
+                    <li data-view="calendar">Calendar</li>
+                    <li data-view="analytics">Analytics</li>
+                </ul>
+                <div class="sidebar-footer">
+                    <button id="logout-btn" class="btn-secondary">Logout</button>
+                </div>
+            </nav>
+
+            <main class="content">
+                <header class="top-bar">
+                    <h2 id="page-title">Dashboard Overview</h2>
+                    <div class="user-profile">
+                        <span id="user-display">User</span>
+                    </div>
+                </header>
+
+                <div id="view-container">
+                    <!-- Dynamic content loads here -->
+                </div>
+            </main>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="hidden">
+            <div class="loader"></div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="toast-container"></div>
+
+    <script src="/js/app.js" type="module"></script>
+</body>
+</html>

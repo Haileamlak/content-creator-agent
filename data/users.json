@@ -3,5 +3,10 @@
     "id": "54d52757-fda8-4e15-8736-bc708a9a10df",
     "email": "test@nebula.ai",
     "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f"
+  },
+  {
+    "id": "u-1771362011",
+    "email": "haileamlakbeat@gmail.com",
+    "password_hash": "16e3a22e7a6c3e21ff1ccdf527a4360861ec1ce5a7d218ca0db6cb03c92d507e"
   }
 ]
